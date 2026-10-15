@@ -4,7 +4,12 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 const UA = { 'User-Agent': 'Mozilla/5.0 (Nutreon Ciencia; espelho de cards)' };
 const sitemap = await (await fetch('https://www.nutreon.com.br/sitemap_blog.xml', { headers: UA })).text();
-const posts = [...sitemap.matchAll(/<loc>([^<]+\/blog\/posts\/[^<]+)<\/loc>/g)].map(m => m[1]);
+const indice = await (await fetch('https://www.nutreon.com.br/blog/', { headers: UA })).text();
+// o sitemap demora a atualizar: soma os posts listados na página do blog
+const posts = [...new Set([
+  ...[...sitemap.matchAll(/<loc>([^<]+\/blog\/posts\/[^<]+)<\/loc>/g)].map(m => m[1]),
+  ...[...indice.matchAll(/href="((?:https:\/\/www\.nutreon\.com\.br)?\/blog\/posts\/[\w-]+)\/?"/g)].map(m => m[1].startsWith('http') ? m[1] : 'https://www.nutreon.com.br' + m[1]),
+])];
 mkdirSync('m', { recursive: true });
 let novos = 0;
 for (const url of posts) {
