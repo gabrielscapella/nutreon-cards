@@ -1,0 +1,24 @@
+name: espelhar-cards
+# Copia os cards públicos do blog para cá (servidos pelo jsDelivr com CORS). A cada 20 minutos e sob demanda.
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: espelhar, cancel-in-progress: false }
+jobs:
+  espelhar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: node scripts/espelhar.mjs
+      - run: |
+          git config user.name "Nutreon Science"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add m
+          git commit -m "Cards espelhados do blog" || exit 0
+          git push
